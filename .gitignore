@@ -1,18 +1,2 @@
-# Ignorar node_modules em ambos frontend e backend
 backend/node_modules/
 frontend/node_modules/
-
-# Ignorar arquivos de build
-frontend/build/
-backend/dist/
-
-# Ignorar variáveis de ambiente
-backend/.env
-frontend/.env
-
-# Logs
-*.log
-
-# IDEs
-.vscode/
-.idea/
