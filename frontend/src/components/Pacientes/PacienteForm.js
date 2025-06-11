@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
+// Importa useNavigate do react-router-dom para redirecionamento
+import { useNavigate } from 'react-router-dom';
 
-const PacienteForm = ({ onPacienteAdicionado }) => {
+// Remove a prop 'onPacienteAdicionado' da desestruturação
+const PacienteForm = () => {
+  // Inicializa o hook de navegação
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -16,10 +22,17 @@ const PacienteForm = ({ onPacienteAdicionado }) => {
     e.preventDefault();
     try {
       await api.post('/pacientes', formData);
-      onPacienteAdicionado();
+      // Após o sucesso do cadastro, navega para a página de listagem de pacientes
+      navigate('/pacientes');
+      
+      // Limpa o formulário após o envio bem-sucedido
       setFormData({ nome: '', email: '', telefone: '' });
+      
     } catch (error) {
       console.error('Erro ao adicionar paciente:', error);
+      // Opcional: Adicione um feedback visual para o usuário em caso de erro
+      // Por exemplo, usando um estado para exibir uma mensagem de erro na UI
+      alert('Ocorreu um erro ao cadastrar o paciente. Verifique o console para detalhes.');
     }
   };
 

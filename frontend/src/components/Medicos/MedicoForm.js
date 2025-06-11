@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
+// Importa useNavigate do react-router-dom para redirecionamento
+import { useNavigate } from 'react-router-dom';
 
-const MedicoForm = ({ onMedicoAdicionado }) => {
+// Remove a prop 'onMedicoAdicionado' da desestruturação
+const MedicoForm = () => {
+  // Inicializa o hook de navegação
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     nome: '',
     especialidade: '',
@@ -16,10 +22,17 @@ const MedicoForm = ({ onMedicoAdicionado }) => {
     e.preventDefault();
     try {
       await api.post('/medicos', formData);
-      onMedicoAdicionado();
+      // Após o sucesso do cadastro, navega para a página de listagem de médicos
+      navigate('/medicos');
+      
+      // Limpa o formulário (útil se você não for imediatamente para outra página)
       setFormData({ nome: '', especialidade: '', email: '' });
+      
     } catch (error) {
       console.error('Erro ao adicionar médico:', error);
+      // Opcional: Adicione um feedback visual para o usuário em caso de erro
+      // Por exemplo, usando um estado para exibir uma mensagem de erro na UI
+      alert('Ocorreu um erro ao cadastrar o médico. Verifique o console para detalhes.');
     }
   };
 
@@ -61,6 +74,18 @@ const MedicoForm = ({ onMedicoAdicionado }) => {
             onChange={handleChange}
             className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Telefone</label>
+          <input
+            type="text" // Ou "tel" para navegadores, mas "text" é mais flexível para formatação
+            name="telefone"
+            value={formData.telefone}
+            onChange={handleChange}
+            className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required // Torna o telefone obrigatório
           />
         </div>
 

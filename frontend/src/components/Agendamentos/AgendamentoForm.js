@@ -4,14 +4,21 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { registerLocale } from 'react-datepicker';
 import ptBR from 'date-fns/locale/pt-BR';
+// Importa useNavigate do react-router-dom
+import { useNavigate } from 'react-router-dom';
+
 registerLocale('pt-BR', ptBR);
 
-const AgendamentoForm = ({ onAgendamentoAdicionado }) => {
+// Remove a prop 'onAgendamentoAdicionado' da desestruturação
+const AgendamentoForm = () => {
+  // Inicializa o hook de navegação
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     paciente_id: '',
     medico_id: '',
     data: '',
-    hora: '',
+    horario: '',
   });
 
   const [pacientes, setPacientes] = useState([]);
@@ -21,10 +28,15 @@ const AgendamentoForm = ({ onAgendamentoAdicionado }) => {
 
   useEffect(() => {
     async function fetchDados() {
-      const resPacientes = await api.get('/pacientes');
-      const resMedicos = await api.get('/medicos');
-      setPacientes(resPacientes.data);
-      setMedicos(resMedicos.data);
+      try {
+        const resPacientes = await api.get('/pacientes');
+        const resMedicos = await api.get('/medicos');
+        setPacientes(resPacientes.data);
+        setMedicos(resMedicos.data);
+      } catch (error) {
+        console.error('Erro ao buscar dados de pacientes ou médicos:', error);
+        // Opcional: exibir uma mensagem de erro para o usuário
+      }
     }
     fetchDados();
   }, []);
@@ -32,7 +44,7 @@ const AgendamentoForm = ({ onAgendamentoAdicionado }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === 'hora') {
+    if (name === 'horario') {
       const [hora, minuto] = value.split(':').map(Number);
       if (hora < 7 || hora > 19 || (hora === 19 && minuto > 0)) {
         setHorarioValido(false);
@@ -47,20 +59,39 @@ const AgendamentoForm = ({ onAgendamentoAdicionado }) => {
   };
 
   const handleDateChange = (date) => {
-    const dataFormatada = date.toISOString().split('T')[0];
-    setFormData({ ...formData, data: dataFormatada });
+    // Garante que a data seja um objeto Date antes de chamar toISOString
+    if (date instanceof Date && !isNaN(date)) {
+      const dataFormatada = date.toISOString().split('T')[0];
+      setFormData({ ...formData, data: dataFormatada });
+    } else {
+      setFormData({ ...formData, data: '' }); // Limpa a data se for inválida
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await api.post('/agendamentos', formData);
-      onAgendamentoAdicionado();
-      setFormData({ paciente_id: '', medico_id: '', data: '', hora: '' });
+      // Remove a chamada para onAgendamentoAdicionado()
+      // Navega de volta para a lista de agendamentos após o sucesso
+      navigate('/agendamentos');
+      
+      // Limpa o formulário apenas se não estiver navegando para outra página imediatamente
+      // Se você quiser que o formulário limpe antes de navegar, mantenha as linhas abaixo
+      setFormData({ paciente_id: '', medico_id: '', data: '', horario: '' });
       setHorarioValido(true);
       setMensagemErroHorario('');
+
     } catch (error) {
       console.error('Erro ao agendar consulta:', error);
+      // Opcional: exibir uma mensagem de erro para o usuário (ex: horário já ocupado)
+      if (error.response && error.response.status === 409) {
+        setMensagemErroHorario('Horário já agendado para o médico selecionado.');
+        setHorarioValido(false);
+      } else {
+        setMensagemErroHorario('Ocorreu um erro ao agendar. Tente novamente.');
+        setHorarioValido(false);
+      }
     }
   };
 
@@ -125,8 +156,8 @@ const AgendamentoForm = ({ onAgendamentoAdicionado }) => {
             <label className="block text-gray-700 font-medium mb-1">Hora</label>
             <input
               type="time"
-              name="hora"
-              value={formData.hora}
+              name="horario"
+              value={formData.horario} // Corrigido de formData.hora para formData.horario
               onChange={handleChange}
               min="07:00"
               max="19:00"
